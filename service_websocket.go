@@ -7,7 +7,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/go-kit/kit/log/level"
 	"github.com/gorilla/websocket"
 )
 
@@ -27,12 +26,10 @@ func (as *apiService) DepthWebsocket(dwr DepthWebsocketRequest) (chan *DepthEven
 		for {
 			select {
 			case <-as.Ctx.Done():
-				level.Info(as.Logger).Log("closing reader")
 				return
 			default:
 				_, message, err := c.ReadMessage()
 				if err != nil {
-					level.Error(as.Logger).Log("wsRead", err)
 					return
 				}
 				rawDepth := struct {
@@ -44,12 +41,10 @@ func (as *apiService) DepthWebsocket(dwr DepthWebsocketRequest) (chan *DepthEven
 					AskDepthDelta [][]interface{} `json:"a"`
 				}{}
 				if err := json.Unmarshal(message, &rawDepth); err != nil {
-					level.Error(as.Logger).Log("wsUnmarshal", err, "body", string(message))
 					return
 				}
 				t, err := timeFromUnixTimestampFloat(rawDepth.Time)
 				if err != nil {
-					level.Error(as.Logger).Log("wsUnmarshal", err, "body", string(message))
 					return
 				}
 				de := &DepthEvent{
@@ -63,12 +58,10 @@ func (as *apiService) DepthWebsocket(dwr DepthWebsocketRequest) (chan *DepthEven
 				for _, b := range rawDepth.BidDepthDelta {
 					p, err := floatFromString(b[0])
 					if err != nil {
-						level.Error(as.Logger).Log("wsUnmarshal", err, "body", string(message))
 						return
 					}
 					q, err := floatFromString(b[1])
 					if err != nil {
-						level.Error(as.Logger).Log("wsUnmarshal", err, "body", string(message))
 						return
 					}
 					de.Bids = append(de.Bids, &Order{
@@ -101,12 +94,10 @@ func (as *apiService) KlineWebsocket(kwr KlineWebsocketRequest) (chan *KlineEven
 		for {
 			select {
 			case <-as.Ctx.Done():
-				level.Info(as.Logger).Log("closing reader")
 				return
 			default:
 				_, message, err := c.ReadMessage()
 				if err != nil {
-					level.Error(as.Logger).Log("wsRead", err)
 					return
 				}
 				rawKline := struct {
@@ -133,62 +124,50 @@ func (as *apiService) KlineWebsocket(kwr KlineWebsocketRequest) (chan *KlineEven
 					} `json:"k"`
 				}{}
 				if err := json.Unmarshal(message, &rawKline); err != nil {
-					level.Error(as.Logger).Log("wsUnmarshal", err, "body", string(message))
 					return
 				}
 				t, err := timeFromUnixTimestampFloat(rawKline.Time)
 				if err != nil {
-					level.Error(as.Logger).Log("wsUnmarshal", err, "body", rawKline.Time)
 					return
 				}
 				ot, err := timeFromUnixTimestampFloat(rawKline.Kline.OpenTime)
 				if err != nil {
-					level.Error(as.Logger).Log("wsUnmarshal", err, "body", rawKline.Kline.OpenTime)
 					return
 				}
 				ct, err := timeFromUnixTimestampFloat(rawKline.Kline.CloseTime)
 				if err != nil {
-					level.Error(as.Logger).Log("wsUnmarshal", err, "body", rawKline.Kline.CloseTime)
 					return
 				}
 				open, err := floatFromString(rawKline.Kline.Open)
 				if err != nil {
-					level.Error(as.Logger).Log("wsUnmarshal", err, "body", rawKline.Kline.Open)
 					return
 				}
 				cls, err := floatFromString(rawKline.Kline.Close)
 				if err != nil {
-					level.Error(as.Logger).Log("wsUnmarshal", err, "body", rawKline.Kline.Close)
 					return
 				}
 				high, err := floatFromString(rawKline.Kline.High)
 				if err != nil {
-					level.Error(as.Logger).Log("wsUnmarshal", err, "body", rawKline.Kline.High)
 					return
 				}
 				low, err := floatFromString(rawKline.Kline.Low)
 				if err != nil {
-					level.Error(as.Logger).Log("wsUnmarshal", err, "body", rawKline.Kline.Low)
 					return
 				}
 				vol, err := floatFromString(rawKline.Kline.Volume)
 				if err != nil {
-					level.Error(as.Logger).Log("wsUnmarshal", err, "body", rawKline.Kline.Volume)
 					return
 				}
 				qav, err := floatFromString(rawKline.Kline.QuoteAssetVolume)
 				if err != nil {
-					level.Error(as.Logger).Log("wsUnmarshal", err, "body", (rawKline.Kline.QuoteAssetVolume))
 					return
 				}
 				tbbav, err := floatFromString(rawKline.Kline.TakerBuyBaseAssetVolume)
 				if err != nil {
-					level.Error(as.Logger).Log("wsUnmarshal", err, "body", rawKline.Kline.TakerBuyBaseAssetVolume)
 					return
 				}
 				tbqav, err := floatFromString(rawKline.Kline.TakerBuyQuoteAssetVolume)
 				if err != nil {
-					level.Error(as.Logger).Log("wsUnmarshal", err, "body", rawKline.Kline.TakerBuyQuoteAssetVolume)
 					return
 				}
 
@@ -241,12 +220,10 @@ func (as *apiService) TradeWebsocket(twr TradeWebsocketRequest) (chan *AggTradeE
 		for {
 			select {
 			case <-as.Ctx.Done():
-				level.Info(as.Logger).Log("closing reader")
 				return
 			default:
 				_, message, err := c.ReadMessage()
 				if err != nil {
-					level.Error(as.Logger).Log("wsRead", err)
 					return
 				}
 				rawAggTrade := struct {
@@ -262,28 +239,23 @@ func (as *apiService) TradeWebsocket(twr TradeWebsocketRequest) (chan *AggTradeE
 					IsMaker      bool    `json:"m"`
 				}{}
 				if err := json.Unmarshal(message, &rawAggTrade); err != nil {
-					level.Error(as.Logger).Log("wsUnmarshal", err, "body", string(message))
 					return
 				}
 				t, err := timeFromUnixTimestampFloat(rawAggTrade.Time)
 				if err != nil {
-					level.Error(as.Logger).Log("wsUnmarshal", err, "body", rawAggTrade.Time)
 					return
 				}
 
 				price, err := floatFromString(rawAggTrade.Price)
 				if err != nil {
-					level.Error(as.Logger).Log("wsUnmarshal", err, "body", rawAggTrade.Price)
 					return
 				}
 				qty, err := floatFromString(rawAggTrade.Quantity)
 				if err != nil {
-					level.Error(as.Logger).Log("wsUnmarshal", err, "body", rawAggTrade.Quantity)
 					return
 				}
 				ts, err := timeFromUnixTimestampFloat(rawAggTrade.Timestamp)
 				if err != nil {
-					level.Error(as.Logger).Log("wsUnmarshal", err, "body", rawAggTrade.Timestamp)
 					return
 				}
 
@@ -328,12 +300,10 @@ func (as *apiService) UserDataWebsocket(urwr UserDataWebsocketRequest) (chan *Ac
 		for {
 			select {
 			case <-as.Ctx.Done():
-				level.Info(as.Logger).Log("closing reader")
 				return
 			default:
 				_, message, err := c.ReadMessage()
 				if err != nil {
-					level.Error(as.Logger).Log("wsRead", err)
 					return
 				}
 				rawAccount := struct {
@@ -354,12 +324,10 @@ func (as *apiService) UserDataWebsocket(urwr UserDataWebsocketRequest) (chan *Ac
 					} `json:"B"`
 				}{}
 				if err := json.Unmarshal(message, &rawAccount); err != nil {
-					level.Error(as.Logger).Log("wsUnmarshal", err, "body", string(message))
 					return
 				}
 				t, err := timeFromUnixTimestampFloat(rawAccount.Time)
 				if err != nil {
-					level.Error(as.Logger).Log("wsUnmarshal", err, "body", rawAccount.Time)
 					return
 				}
 
@@ -381,12 +349,10 @@ func (as *apiService) UserDataWebsocket(urwr UserDataWebsocketRequest) (chan *Ac
 				for _, b := range rawAccount.Balances {
 					free, err := floatFromString(b.AvailableBalance)
 					if err != nil {
-						level.Error(as.Logger).Log("wsUnmarshal", err, "body", b.AvailableBalance)
 						return
 					}
 					locked, err := floatFromString(b.Locked)
 					if err != nil {
-						level.Error(as.Logger).Log("wsUnmarshal", err, "body", b.Locked)
 						return
 					}
 					ae.Balances = append(ae.Balances, &Balance{
@@ -414,7 +380,6 @@ func (as *apiService) exitHandler(c *websocket.Conn, done chan struct{}) {
 		case t := <-ticker.C:
 			err := c.WriteMessage(websocket.TextMessage, []byte(t.String()))
 			if err != nil {
-				level.Error(as.Logger).Log("wsWrite", err)
 				return
 			}
 		case <-as.Ctx.Done():
@@ -422,7 +387,6 @@ func (as *apiService) exitHandler(c *websocket.Conn, done chan struct{}) {
 			case <-done:
 			case <-time.After(time.Second):
 			}
-			level.Info(as.Logger).Log("closing connection")
 			return
 		}
 	}

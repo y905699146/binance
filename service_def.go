@@ -9,8 +9,6 @@ import (
 	"net/url"
 	"time"
 
-	"github.com/go-kit/kit/log"
-	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
 )
 
@@ -55,7 +53,6 @@ type apiService struct {
 	URL    string
 	APIKey string
 	Signer Signer
-	Logger log.Logger
 	Ctx    context.Context
 }
 
@@ -63,10 +60,7 @@ type apiService struct {
 //
 // If logger or ctx are not provided, NopLogger and Background context are used as default.
 // You can use context for one-time request cancel (e.g. when shutting down the app).
-func NewAPIService(url, apiKey string, signer Signer, logger log.Logger, ctx context.Context) Service {
-	if logger == nil {
-		logger = log.NewNopLogger()
-	}
+func NewAPIService(url, apiKey string, signer Signer, ctx context.Context) Service {
 	if ctx == nil {
 		ctx = context.Background()
 	}
@@ -74,7 +68,6 @@ func NewAPIService(url, apiKey string, signer Signer, logger log.Logger, ctx con
 		URL:    url,
 		APIKey: apiKey,
 		Signer: signer,
-		Logger: logger,
 		Ctx:    ctx,
 	}
 }
@@ -126,9 +119,7 @@ func (as *apiService) request(method string, endpoint string, params map[string]
 		req.Header.Add("X-MBX-APIKEY", as.APIKey)
 	}
 	if sign {
-		level.Debug(as.Logger).Log("queryString", q.Encode())
 		q.Add("signature", as.Signer.Sign([]byte(q.Encode())))
-		level.Debug(as.Logger).Log("signature", as.Signer.Sign([]byte(q.Encode())))
 	}
 	req.URL.RawQuery = q.Encode()
 
