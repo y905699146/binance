@@ -6,7 +6,6 @@ import (
 	"strconv"
 	"time"
 
-	"github.com/go-kit/kit/log/level"
 	"github.com/pkg/errors"
 )
 
@@ -64,7 +63,6 @@ func recvWindow(d time.Duration) int64 {
 
 func (as *apiService) handleError(textRes []byte) error {
 	err := &Error{}
-	level.Info(as.Logger).Log("errorResponse", textRes)
 	if err := json.Unmarshal(textRes, err); err != nil {
 		return errors.Wrap(err, "error unmarshal failed")
 	}
