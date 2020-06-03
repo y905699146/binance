@@ -9,5 +9,5 @@ require (
 	github.com/gorilla/websocket v1.2.0
 	github.com/kr/logfmt v0.0.0-20140226030751-b84e30acd515 // indirect
 	github.com/pkg/errors v0.8.0
-	github.com/rootpd/binance v0.0.0-20171024115603-c656b55bcff4
+	github.com/y905699146/go-binance v0.0.0-20200603183309-a4981f3d82f8
 )
