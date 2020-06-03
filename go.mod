@@ -1,4 +1,4 @@
-module github/y905699146/binance
+module github.com/y905699146/binance
 
 go 1.12
 
