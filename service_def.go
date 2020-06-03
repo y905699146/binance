@@ -2,8 +2,11 @@ package binance
 
 import (
 	"context"
+	"crypto/tls"
 	"fmt"
+	"net"
 	"net/http"
+	"net/url"
 	"time"
 
 	"github.com/go-kit/kit/log"
@@ -76,12 +79,37 @@ func NewAPIService(url, apiKey string, signer Signer, logger log.Logger, ctx con
 	}
 }
 
+var (
+	client *http.Client
+)
+
+func init() {
+	if client == nil {
+		client = initHttpClient()
+	}
+}
+
+func initHttpClient() *http.Client {
+	client := &http.Client{
+		Transport: &http.Transport{
+			DialContext: (&net.Dialer{
+				Timeout:   5 * time.Second,
+				KeepAlive: 5 * time.Second,
+			}).DialContext,
+			MaxIdleConns:        30,               //最大空闲连接数
+			MaxIdleConnsPerHost: 60,               //最大与服务器的连接数  默认是2
+			IdleConnTimeout:     30 * time.Second, //空闲连接保持时间
+			Proxy: func(_ *http.Request) (*url.URL, error) {
+				return url.Parse("http://127.0.0.1:7890")
+			},
+			TLSClientConfig: &tls.Config{InsecureSkipVerify: true}, // disable verify
+		},
+	}
+	return client
+}
+
 func (as *apiService) request(method string, endpoint string, params map[string]string,
 	apiKey bool, sign bool) (*http.Response, error) {
-	transport := &http.Transport{}
-	client := &http.Client{
-		Transport: transport,
-	}
 
 	url := fmt.Sprintf("%s/%s", as.URL, endpoint)
 	req, err := http.NewRequest(method, url, nil)
